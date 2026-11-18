@@ -1,16 +1,18 @@
 # FrontierHuman
 
-An intent-detection benchmark for humans. An AI agent asks a clarifying question ("Should I delete the old migration?"), the human answers tersely ("or", "yes", "b I guess", "a, wait no"), and you pick what they actually meant, the way a strong agent would.
+An intent-detection benchmark for humans. An AI agent asks a clarifying question ("Should I delete the old migration? Yes or no?"), the human answers tersely ("or", "yes", "b I guess", "a, wait no"), and you pick what they actually meant, the way a strong agent would.
 
 **Take it:** https://edward40.com/frontier-human/
 
 - 20 items across six categories: trailing "or", non-answers, ordinal reference, pointers & repair, implicit constraint, sarcasm & hedging.
 - 15 hard and 5 medium. Each wrong option is a documented agent failure mode, and many are the answer a strong model would give.
-- English and Simplified Chinese (EN / 中 toggle; defaults to the browser language). The Chinese items are adapted, not word-for-word, so each keeps its ambiguity (trailing "or" becomes 还是…).
+- English and Simplified Chinese (EN / 中 toggle; defaults to the browser language). The Chinese items are adapted, not word-for-word, so each keeps its ambiguity (trailing "or" becomes a bare 吗).
 - The report shows your score, verdict, a rubric of all five bands with yours highlighted, comparisons with strong-agent and literal-reader baselines, per-category criteria and an explanation for every item.
 - Magic link: finishing puts `?r=<version>.<code>` in the URL. The code packs your answers (2 bits each, plus a checksum) in base64url, so the link rebuilds the same report on any device with no backend. Links from an older version of the exam, or damaged links, show a notice instead.
-- Share to X, LinkedIn, Facebook, Reddit, Weibo, WeChat (QR code) or the system share sheet.
-- Brutalist blue design with light and dark themes (follows `prefers-color-scheme`; the toggle choice is saved).
+- Share to X, LinkedIn, Facebook, Reddit, Weibo, WeChat (QR code) or the system share sheet. Shared links point at a static page per score and language (`/s/<score>/?r=…`, `/s/<score>/zh/?r=…`) whose Open Graph and Twitter tags show that score's cover, and the page opens the full report.
+- "↓ Cover" saves a 1080×1350 PNG result card (score, verdict, QR of the report link) in the current language and theme, for places where links don't preview.
+- Pixel-art logo (a human and a question mark on a 16×16 grid) used for the header, favicons and every cover.
+- Brutalist blue design with light and dark themes (follows `prefers-color-scheme`; the toggle choice is saved), tuned for phones down to 360 px wide.
 - Google Analytics (GA4). The measurement ID is set once, in the first script in `site/index.html`.
 
 ## Layout
@@ -20,14 +22,18 @@ An intent-detection benchmark for humans. An AI agent asks a clarifying question
 | `research.md` | Research summary with sources |
 | `site/data/items.json` | The 20 exam items (English) |
 | `site/data/items.zh.json` | Chinese text for the same items, keyed by id |
-| `site/vendor/qrcode.js` | qrcode-generator 1.5.2 (MIT), for the WeChat QR |
-| `site/og.png` | Social card, rendered from `tools/og.html` by `tools/render-og.mjs` (needs Playwright) |
+| `site/vendor/qrcode.js` | qrcode-generator 1.5.2 (MIT), for the QR codes |
+| `site/logo.js`, `site/rubric.js` | Logo pixels and verdict bands, shared by the app and the build scripts |
+| `site/covers/` | Social covers: `default-{en,zh}.png` and `{en,zh}/<score>.png` (1200×630) |
+| `tools/build-assets.mjs` | Renders the logo SVGs, favicons and covers (needs Playwright; run after changing the logo, bands or cover copy) |
+| `tools/build-pages.mjs` | Writes `site/zh/` and the per-score share pages from `site/index.html` (no dependencies; also runs in the Pages workflow) |
 | `site/` | Static site (plain HTML/CSS/JS, no build step) |
-| `.github/workflows/pages.yml` | Validates both item files and deploys `site/` to GitHub Pages on push to `main` |
+| `.github/workflows/pages.yml` | Validates both item files, builds the share pages, checks every cover exists and deploys `site/` to GitHub Pages on push to `main` |
 
 ## Run locally
 
 ```sh
+node tools/build-pages.mjs
 python3 -m http.server 8000 --directory site
 # open http://localhost:8000
 ```

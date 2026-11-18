@@ -47,6 +47,18 @@ jobs:
             }
             console.log("items ok");
           '
+      - name: Build share pages
+        run: |
+          node tools/build-pages.mjs
+          node -e '
+            const fs = require("fs");
+            const n = require("./site/data/items.json").items.length;
+            const need = ["covers/default-en.png", "covers/default-zh.png", "zh/index.html", "logo-light.svg", "logo-dark.svg", "favicon.svg", "favicon-32.png", "apple-touch-icon.png"];
+            for (let s = 0; s <= n; s++) for (const l of ["en", "zh"]) need.push(`covers/${l}/${s}.png`, `s/${s}/${l === "zh" ? "zh/" : ""}index.html`);
+            const missing = need.filter((f) => !fs.existsSync("site/" + f));
+            if (missing.length) throw new Error("missing: " + missing.join(", "));
+            console.log("assets ok:", need.length);
+          '
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

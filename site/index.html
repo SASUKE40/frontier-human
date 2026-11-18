@@ -15,44 +15,60 @@
       gtag("config", id);
     })();
   </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef4ff" />
   <title>FrontierHuman</title>
   <script>
     (function () {
       var d = document.documentElement, t = null, l = null;
       try { t = localStorage.getItem("frontierhuman:theme"); l = localStorage.getItem("frontierhuman:lang"); } catch (e) {}
       if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      if (l !== "en" && l !== "zh") l = /^zh\b/i.test(navigator.language || "") ? "zh" : "en";
+      if (l !== "en" && l !== "zh") l = d.getAttribute("data-lang-hint") || (/^zh\b/i.test(navigator.language || "") ? "zh" : "en");
       d.dataset.theme = t;
       d.lang = l === "zh" ? "zh-CN" : "en";
-      if (l === "zh") document.title = "FrontierHuman · 他到底什么意思？";
+      document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#050b1c" : "#eef4ff";
+      if (l === "zh") document.title = "FrontierHuman · 何意味？";
     })();
   </script>
   <meta name="color-scheme" content="light dark" />
-  <meta name="description" content="An agent asks a clarifying question. The human answers &quot;or&quot;. What did they mean?" />
+  <!-- meta -->
+  <meta name="description" content="20 terse replies to an AI agent's clarifying questions. Read them the way a strong agent would." />
   <link rel="canonical" href="https://edward40.com/frontier-human/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="FrontierHuman" />
   <meta property="og:title" content="FrontierHuman · What did they mean?" />
   <meta property="og:description" content="20 terse replies to an AI agent's clarifying questions. Read them the way a strong agent would." />
   <meta property="og:url" content="https://edward40.com/frontier-human/" />
-  <meta property="og:image" content="https://edward40.com/frontier-human/og.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="zh_CN" />
+  <meta property="og:image" content="https://edward40.com/frontier-human/covers/default-en.png" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="FrontierHuman: Agent asks “Should I delete the old migration?” Human replies “or”." />
+  <meta property="og:image:alt" content="FrontierHuman: Agent asks “Should I delete the old migration? Yes or no?” Human replies “or”." />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="FrontierHuman · What did they mean?" />
   <meta name="twitter:description" content="20 terse replies to an AI agent's clarifying questions. Read them the way a strong agent would." />
-  <meta name="twitter:image" content="https://edward40.com/frontier-human/og.png" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%231d3fd6'/><text x='50%' y='58%' font-size='44' text-anchor='middle' dominant-baseline='middle' font-family='Arial' font-weight='900' fill='white'>?</text></svg>" />
+  <meta name="twitter:image" content="https://edward40.com/frontier-human/covers/default-en.png" />
+  <meta name="twitter:image:alt" content="FrontierHuman: Agent asks “Should I delete the old migration? Yes or no?” Human replies “or”." />
+  <link rel="alternate" hreflang="en" href="https://edward40.com/frontier-human/" />
+  <link rel="alternate" hreflang="zh-CN" href="https://edward40.com/frontier-human/zh/" />
+  <!-- /meta -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="bar">
-    <a class="brand" href="./" data-action="home">FRONTIER<span>HUMAN</span></a>
+    <a class="brand" href="./" data-action="home" aria-label="FrontierHuman">
+      <img class="logo-mark logo-light" src="logo-light.svg" width="32" height="32" alt="" />
+      <img class="logo-mark logo-dark" src="logo-dark.svg" width="32" height="32" alt="" />
+      <span class="word" aria-hidden="true">FRONTIER<span>HUMAN</span></span>
+    </a>
     <nav class="nav">
-      <a href="https://github.com/SASUKE40/frontier-human/blob/main/research.md" target="_blank" rel="noopener" data-i18n="research">Research</a>
-      <a href="https://github.com/SASUKE40/frontier-human" target="_blank" rel="noopener" class="gh">GitHub</a>
+      <a href="https://github.com/SASUKE40/frontier-human/blob/main/research.md" target="_blank" rel="noopener" class="wide" data-i18n="research">Research</a>
+      <a href="https://github.com/SASUKE40/frontier-human" target="_blank" rel="noopener" class="wide gh">GitHub</a>
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="en" lang="en">EN</button>
         <button type="button" data-lang="zh" lang="zh-CN">中</button>
@@ -64,6 +80,11 @@
   <main id="app" aria-live="polite">
     <noscript><p>FrontierHuman needs JavaScript.</p></noscript>
   </main>
+
+  <footer class="foot">
+    <a href="https://github.com/SASUKE40/frontier-human/blob/main/research.md" target="_blank" rel="noopener" data-i18n="research">Research</a>
+    <a href="https://github.com/SASUKE40/frontier-human" target="_blank" rel="noopener">GitHub</a>
+  </footer>
 
   <script src="vendor/qrcode.js"></script>
   <script src="app.js" type="module"></script>

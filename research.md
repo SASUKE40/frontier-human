@@ -66,7 +66,7 @@ Distilled from the work above and from common coding-agent transcripts (Cursor, 
 
 The Simplified Chinese items (`site/data/items.zh.json`) are adapted, not translated word for word, so each reply stays ambiguous in the same way:
 
-- Turn-final "or" becomes turn-final 还是… ("要吧，还是…", "不要吧，还是…"), which in spoken Mandarin carries the same open-alternative force as Drake's trailing "or".
+- Turn-final "or" becomes a bare or turn-final 吗 ("吗", "吗？", "要吗", "不要吗"). Said alone, the question particle hands the question back without committing, which carries the same open, hedged force as Drake's trailing "or". 还是 stays only where it is the ordinary connector in an A-or-B question.
 - The non-committal "yes" becomes 嗯, which can mean "agreed", "I'm listening" or "both are fine" depending on the turn before.
 - Hedges keep their sentence-final particles (行吧……, 那就 b 吧……), since 吧 and the trailing ellipsis carry the reluctance that "sure…" and "I guess" carry in English.
 - Option letters, file names and other technical tokens stay in Latin script, as they would in a Chinese engineering chat.

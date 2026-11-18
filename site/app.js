@@ -1,21 +1,18 @@
+import { BANDS, BAND_TEXT, SHARE_TEXT, bandFor, sharePath } from "./rubric.js";
+import { LOGO_COLORS, drawLogo } from "./logo.js";
+
 const STORAGE_KEY = "frontierhuman:v2";
 const THEME_KEY = "frontierhuman:theme";
 const LANG_KEY = "frontierhuman:lang";
 const LETTERS = ["A", "B", "C", "D"];
-const BANDS = [
-  { id: "agent", min: 17, max: 20 },
-  { id: "strong", min: 13, max: 16 },
-  { id: "context", min: 9, max: 12 },
-  { id: "leaning", min: 5, max: 8 },
-  { id: "literal", min: 0, max: 4 }
-];
+const ROOT = new URL("./", document.baseURI);
 
 const I18N = {
   en: {
     title: "FrontierHuman",
     research: "Research",
     h1: 'What did they <mark>mean?</mark>',
-    demoQ: "Should I delete the old migration?",
+    demoQ: "Should I delete the old migration? Yes or no?",
     demoA: "or",
     agent: "Agent",
     human: "Human",
@@ -55,14 +52,12 @@ const I18N = {
     scan: "Scan in WeChat",
     badLink: "Broken link.",
     oldLink: "Old link. The exam has changed.",
-    shareText: (s, n, v) => `${s}/${n} on FrontierHuman: ${v}. What did they mean?`,
-    bands: {
-      agent: ["Agent-level intent detection", "Reads non-answers, reversals and tone the way a strong agent does."],
-      strong: ["Strong collaborator", "Reliable; slips on spread-out cues or clever compromises."],
-      context: ["Context-aware", "Uses context, but often takes the words at face value."],
-      leaning: ["Literal-leaning", "Mostly answers the words, not the person."],
-      literal: ["Literal reader", "Takes every reply at face value."]
-    },
+    cover: "↓ Cover",
+    cardScan: "Scan for the full report",
+    coverLabel: "Download cover image",
+    close: "Close",
+    shareText: SHARE_TEXT.en,
+    bands: BAND_TEXT.en,
     criteria: {
       or: "Reads “or” as a soft no, a pointer to an option already raised, or a request to explain.",
       nonanswer: "Recovers the choice behind “yes”, “both?” or “wait no” instead of forcing an option.",
@@ -73,11 +68,11 @@ const I18N = {
     }
   },
   zh: {
-    title: "FrontierHuman · 他到底什么意思？",
+    title: "FrontierHuman · 何意味？",
     research: "研究",
-    h1: "他到底什么<mark>意思？</mark>",
-    demoQ: "要我删掉旧的 migration 吗？",
-    demoA: "还是…",
+    h1: "何<mark>意味？</mark>",
+    demoQ: "要我删掉旧的 migration 吗？删吗？",
+    demoA: "吗",
     agent: "Agent",
     human: "人类",
     start: (n) => `开始 ${n} 题 →`,
@@ -116,16 +111,14 @@ const I18N = {
     scan: "微信扫一扫",
     badLink: "链接无效。",
     oldLink: "旧版链接，题目已更新。",
-    shareText: (s, n, v) => `我在 FrontierHuman 拿了 ${s}/${n}：${v}。他到底什么意思？`,
-    bands: {
-      agent: ["Agent 级意图识别", "能像强 Agent 一样读懂没选的回答、反转和语气。"],
-      strong: ["默契搭档", "大多可靠；线索分散或遇到聪明折中时会失手。"],
-      context: ["能读语境", "会用上下文，但常按字面理解。"],
-      leaning: ["偏字面", "多数时候回应的是字面，而不是人。"],
-      literal: ["字面读者", "每句回复都按字面理解。"]
-    },
+    cover: "↓ 封面",
+    cardScan: "扫码看完整报告",
+    coverLabel: "下载封面图",
+    close: "关闭",
+    shareText: SHARE_TEXT.zh,
+    bands: BAND_TEXT.zh,
     criteria: {
-      or: "能把“还是…”读成委婉拒绝、指向已提过的方案，或请你解释。",
+      or: "能把“吗”读成委婉拒绝、指向已提过的方案，或请你解释。",
       nonanswer: "能从“嗯”“两个都？”“等等，不对”里还原真实选择，而不是硬选一个。",
       ordinal: "把字母和数字对应到定义它们的那个列表。",
       anaphora: "把“那个”对应到话题本身，把“等等…”当作更正。",
@@ -239,8 +232,8 @@ function decodeAnswers(code) {
   return { answers };
 }
 
-function magicLink(code) {
-  return `${location.origin}${location.pathname}?r=${code}`;
+function magicLink(code, you) {
+  return `${new URL(sharePath(you, lang), ROOT).href}?r=${code}`;
 }
 
 function answersFromState() {
@@ -259,6 +252,7 @@ function syncChrome() {
   document.querySelectorAll("[data-i18n]").forEach((n) => (n.textContent = t(n.dataset.i18n)));
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
   document.title = t("title");
+  document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
 }
 
 themeBtn.addEventListener("click", () => {
@@ -433,10 +427,6 @@ function prev() {
 
 /* ---------- Report ---------- */
 
-function bandFor(score) {
-  return BANDS.find((b) => score >= b.min);
-}
-
 function score(answers) {
   return items().reduce((s, it, i) => s + (answers[i] === it.correct ? 1 : 0), 0);
 }
@@ -457,7 +447,7 @@ function groupScores(answers, key) {
 
 function openReport(answers, shared) {
   const code = encodeAnswers(answers);
-  history.replaceState(null, "", `?r=${code}`);
+  history.replaceState(null, "", `${ROOT.pathname}?r=${code}`);
   renderReport(answers, shared);
 }
 
@@ -489,7 +479,7 @@ function renderReport(answers, shared) {
   const band = bandFor(you);
   const verdict = t("bands")[band.id][0];
   const code = encodeAnswers(answers);
-  const link = magicLink(code);
+  const link = magicLink(code, you);
   const msg = t("shareText")(you, total, verdict);
   const targets = shareTargets(link, msg);
   const cats = labels("categories");
@@ -512,18 +502,20 @@ function renderReport(answers, shared) {
           <button data-go="copy">${t("copyLink")}</button>
         </div>
         <div class="socials">
+          ${navigator.share ? `<button class="primary" data-go="native">${t("share")}</button>` : ""}
           <a href="${targets.x}" target="_blank" rel="noopener" data-share="x">X</a>
           <a href="${targets.linkedin}" target="_blank" rel="noopener" data-share="linkedin">LinkedIn</a>
           <a href="${targets.facebook}" target="_blank" rel="noopener" data-share="facebook">Facebook</a>
           <a href="${targets.reddit}" target="_blank" rel="noopener" data-share="reddit">Reddit</a>
           <a href="${targets.weibo}" target="_blank" rel="noopener" data-share="weibo">${t("weibo")}</a>
-          <button data-go="wechat" aria-expanded="false" aria-controls="qr">${t("wechat")}</button>
-          ${navigator.share ? `<button data-go="native">${t("share")}</button>` : ""}
+          <button data-go="wechat" aria-haspopup="dialog" aria-controls="qr">${t("wechat")}</button>
+          <button class="cover" data-go="cover" aria-label="${t("coverLabel")}">${t("cover")}</button>
         </div>
-        <div class="qr" id="qr" hidden>
+        <dialog class="qr" id="qr" aria-labelledby="qr-title">
           <div class="code">${qrSvg(link)}</div>
-          <div class="scan">${t("scan")}</div>
-        </div>
+          <div class="scan" id="qr-title">${t("scan")}</div>
+          <button class="btn" data-go="qr-close">${t("close")}</button>
+        </dialog>
       </div>
 
       <h2 class="h2">${t("rubric")}</h2>
@@ -638,14 +630,142 @@ async function copyLink() {
   }
 }
 
+function wrapLines(ctx, str, width) {
+  const tokens = str.match(/[\u3000-\u9fff\uff00-\uffef]|[^\s\u3000-\u9fff\uff00-\uffef]+|\s+/g) || [];
+  const lines = [];
+  let line = "";
+  for (const tok of tokens) {
+    const next = line + tok;
+    if (line.trim() && ctx.measureText(next.trimEnd()).width > width) {
+      lines.push(line.trimEnd());
+      line = tok.trimStart();
+    } else line = next;
+  }
+  if (line.trim()) lines.push(line.trimEnd());
+  return lines;
+}
+
+function coverCanvas(answers, link) {
+  const W = 1080, H = 1350, M = 64, B = 14;
+  const css = getComputedStyle(document.documentElement);
+  const v = (k) => css.getPropertyValue(k).trim();
+  const c = { bg: v("--bg"), fg: v("--fg"), panel: v("--panel"), accent: v("--accent"), on: v("--on-accent"), shade: v("--shade"), line: v("--line") };
+  const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  const display = `"Arial Black", "Helvetica Neue", Helvetica, Arial, ${css.getPropertyValue("--cjk")}`;
+  const mono = css.getPropertyValue("--mono");
+  const total = items().length;
+  const you = score(answers);
+  const verdict = t("bands")[bandFor(you).id][0];
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const box = (x, y, w, h, fill, shadow = 0) => {
+    if (shadow) { ctx.fillStyle = c.shade; ctx.fillRect(x + shadow, y + shadow, w, h); }
+    ctx.fillStyle = c.line;
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = fill;
+    ctx.fillRect(x + B, y + B, w - 2 * B, h - 2 * B);
+  };
+
+  ctx.fillStyle = c.line;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = c.bg;
+  ctx.fillRect(B, B, W - 2 * B, H - 2 * B);
+
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `900 46px ${display}`;
+  ctx.fillStyle = c.fg;
+  ctx.fillText("FRONTIER", M, 104);
+  const fw = ctx.measureText("FRONTIER").width;
+  const hw = ctx.measureText("HUMAN").width;
+  ctx.fillStyle = c.accent;
+  ctx.fillRect(M + fw + 4, 62, hw + 16, 56);
+  ctx.fillStyle = c.on;
+  ctx.fillText("HUMAN", M + fw + 12, 104);
+  ctx.fillStyle = c.line;
+  ctx.fillRect(0, 150, W, B);
+
+  const cell = 24, logo = cell * 16;
+  box(M, 214, logo + 64, logo + 64, c.panel, 16);
+  drawLogo(ctx, M + 32, 246, cell, LOGO_COLORS[theme]);
+
+  const sx = M + logo + 64 + 40, sw = W - M - sx;
+  box(sx, 214, sw, logo + 64, c.accent, 16);
+  ctx.fillStyle = c.on;
+  ctx.font = `900 250px ${display}`;
+  const num = String(you);
+  const nw = ctx.measureText(num).width;
+  ctx.font = `900 72px ${display}`;
+  const dw = ctx.measureText(`/${total}`).width;
+  const nx = sx + (sw - nw - dw) / 2;
+  ctx.font = `900 250px ${display}`;
+  ctx.fillText(num, nx, 214 + logo / 2 + 120);
+  ctx.font = `900 72px ${display}`;
+  ctx.fillText(`/${total}`, nx + nw + 4, 214 + logo / 2 + 120);
+
+  ctx.fillStyle = c.fg;
+  let size = 92;
+  let lines;
+  do {
+    ctx.font = `900 ${size}px ${display}`;
+    lines = wrapLines(ctx, lang === "zh" ? verdict : verdict.toUpperCase(), W - 2 * M);
+    size -= 6;
+  } while (lines.length > 2 && size > 40);
+  lines.slice(0, 2).forEach((l, k) => ctx.fillText(l, M, 820 + k * (size + 6)));
+
+  const qy = 1000, qs = 270;
+  ctx.fillStyle = c.line;
+  ctx.fillRect(0, qy - 40, W, B);
+  ctx.fillStyle = c.line;
+  ctx.fillRect(M, qy, qs, qs);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(M + 10, qy + 10, qs - 20, qs - 20);
+  if (typeof window.qrcode === "function") {
+    const qr = window.qrcode(0, "M");
+    qr.addData(link);
+    qr.make();
+    const n = qr.getModuleCount();
+    const m = Math.floor((qs - 44) / n);
+    const ox = M + Math.round((qs - m * n) / 2), oy = qy + Math.round((qs - m * n) / 2);
+    ctx.fillStyle = "#000000";
+    for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) ctx.fillRect(ox + k * m, oy + r * m, m, m);
+  }
+  ctx.fillStyle = c.fg;
+  ctx.font = `900 44px ${display}`;
+  wrapLines(ctx, t("cardScan"), W - M * 2 - qs - 40).slice(0, 2).forEach((l, k) => ctx.fillText(l, M + qs + 40, qy + 90 + k * 54));
+  ctx.font = `700 28px ${mono}`;
+  ctx.fillStyle = c.fg;
+  ctx.fillText(ROOT.host + ROOT.pathname.replace(/\/$/, ""), M + qs + 40, qy + qs - 24);
+  return canvas;
+}
+
+function downloadCover() {
+  const link = document.getElementById("magic").value;
+  const canvas = coverCanvas(view.answers, link);
+  canvas.toBlob((blob) => {
+    if (!blob) return toast(t("copyFailed"));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `frontierhuman-${score(view.answers)}-${lang}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }, "image/png");
+}
+
 /* ---------- Events ---------- */
 
 function goHome() {
-  history.replaceState(null, "", location.pathname);
+  history.replaceState(null, "", ROOT.pathname);
   renderIntro();
 }
 
 app.addEventListener("click", (e) => {
+  if (e.target.id === "qr") return e.target.close();
   const opt = e.target.closest("[data-opt]");
   if (opt) return choose(Number(opt.dataset.opt));
 
@@ -662,7 +782,7 @@ app.addEventListener("click", (e) => {
   switch (go.dataset.go) {
     case "start":
       resetState();
-      history.replaceState(null, "", location.pathname);
+      history.replaceState(null, "", ROOT.pathname);
       renderQuestion();
       break;
     case "resume":
@@ -688,12 +808,15 @@ app.addEventListener("click", (e) => {
     case "copy":
       copyLink();
       break;
-    case "wechat": {
-      const panel = document.getElementById("qr");
-      panel.hidden = !panel.hidden;
-      go.setAttribute("aria-expanded", String(!panel.hidden));
+    case "wechat":
+      document.getElementById("qr").showModal();
       break;
-    }
+    case "qr-close":
+      document.getElementById("qr").close();
+      break;
+    case "cover":
+      downloadCover();
+      break;
     case "native": {
       const link = document.getElementById("magic").value;
       const you = score(view.answers);
