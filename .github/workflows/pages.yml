@@ -34,6 +34,17 @@ jobs:
               if (!d.categories[it.category]) throw new Error(it.id + ": unknown category");
               if (!d.difficulties[it.difficulty]) throw new Error(it.id + ": unknown difficulty");
             }
+            const z = require("./site/data/items.zh.json");
+            if (z.version !== d.version) throw new Error("zh version mismatch");
+            for (const k of Object.keys(d.categories)) if (!z.categories[k]) throw new Error("zh missing category " + k);
+            for (const k of Object.keys(d.difficulties)) if (!z.difficulties[k]) throw new Error("zh missing difficulty " + k);
+            for (const it of d.items) {
+              const t = z.items[it.id];
+              if (!t) throw new Error("zh missing " + it.id);
+              for (const f of ["context", "question", "reply", "cue", "explanation"]) if (!t[f]) throw new Error("zh " + it.id + " missing " + f);
+              if (t.options.length !== 4) throw new Error("zh " + it.id + ": needs 4 options");
+              if (t.history.length !== it.history.length) throw new Error("zh " + it.id + ": history length");
+            }
             console.log("items ok");
           '
       - uses: actions/configure-pages@v5

@@ -61,3 +61,14 @@ Distilled from the work above and from common coding-agent transcripts (Cursor, 
 5. **Same reply, different meaning.** The trailing-"or" family ("or", "or…?", "yes or", "no or") appears five times, and the two bare "or"s have opposite readings (soft no vs. an alternative already floated). "yes" appears twice (agree with the recommendation vs. both). Pattern-matching on the reply doesn't work.
 6. **Some literal answers are right**, and asking again is right only when the reply is truly unfinished or the agent knows a risk the user hasn't weighed.
 7. **Baselines.** The *strong agent* reference answers every item from its cue (it is the answer key). The *literal reader* baseline picks the most surface-level reading of each reply, as authored per item (`literal` in `site/data/items.json`).
+
+## 7. Chinese adaptation
+
+The Simplified Chinese items (`site/data/items.zh.json`) are adapted, not translated word for word, so each reply stays ambiguous in the same way:
+
+- Turn-final "or" becomes turn-final 还是… ("要吧，还是…", "不要吧，还是…"), which in spoken Mandarin carries the same open-alternative force as Drake's trailing "or".
+- The non-committal "yes" becomes 嗯, which can mean "agreed", "I'm listening" or "both are fine" depending on the turn before.
+- Hedges keep their sentence-final particles (行吧……, 那就 b 吧……), since 吧 and the trailing ellipsis carry the reluctance that "sure…" and "I guess" carry in English.
+- Option letters, file names and other technical tokens stay in Latin script, as they would in a Chinese engineering chat.
+
+Answer keys, categories and difficulty are shared across languages, so a magic link gives the same score in either language.

@@ -1,19 +1,149 @@
 const STORAGE_KEY = "frontierhuman:v2";
 const THEME_KEY = "frontierhuman:theme";
+const LANG_KEY = "frontierhuman:lang";
 const LETTERS = ["A", "B", "C", "D"];
-
-const VERDICTS = [
-  { min: 17, name: "Agent-level intent detection" },
-  { min: 13, name: "Strong collaborator" },
-  { min: 9, name: "Context-aware" },
-  { min: 5, name: "Literal-leaning" },
-  { min: 0, name: "Literal reader" }
+const BANDS = [
+  { id: "agent", min: 17, max: 20 },
+  { id: "strong", min: 13, max: 16 },
+  { id: "context", min: 9, max: 12 },
+  { id: "leaning", min: 5, max: 8 },
+  { id: "literal", min: 0, max: 4 }
 ];
 
+const I18N = {
+  en: {
+    title: "FrontierHuman",
+    research: "Research",
+    h1: 'What did they <mark>mean?</mark>',
+    demoQ: "Should I delete the old migration?",
+    demoA: "or",
+    agent: "Agent",
+    human: "Human",
+    start: (n) => `Start ${n} →`,
+    resume: "Resume",
+    report: "Report",
+    next: "Next →",
+    finish: "Finish",
+    prev: "Previous question",
+    progress: "Progress",
+    choices: "Interpretations",
+    vs: "vs.",
+    you: "You",
+    strongAgent: "Strong agent",
+    literalReader: "Literal reader",
+    rubric: "Rubric",
+    category: "Category",
+    difficulty: "Difficulty",
+    review: "Review",
+    all: "All",
+    allItems: "All items",
+    missedItems: "Missed items",
+    correctItems: "Correct items",
+    correct: "correct",
+    missed: "missed",
+    intended: "intended",
+    yourPick: "your pick",
+    retake: "Retake",
+    takeIt: "Take it →",
+    copyLink: "Copy link",
+    copied: "Copied",
+    copyFailed: "Copy failed",
+    magicLink: "Report link",
+    share: "Share…",
+    wechat: "WeChat",
+    weibo: "Weibo",
+    scan: "Scan in WeChat",
+    badLink: "Broken link.",
+    oldLink: "Old link. The exam has changed.",
+    shareText: (s, n, v) => `${s}/${n} on FrontierHuman: ${v}. What did they mean?`,
+    bands: {
+      agent: ["Agent-level intent detection", "Reads non-answers, reversals and tone the way a strong agent does."],
+      strong: ["Strong collaborator", "Reliable; slips on spread-out cues or clever compromises."],
+      context: ["Context-aware", "Uses context, but often takes the words at face value."],
+      leaning: ["Literal-leaning", "Mostly answers the words, not the person."],
+      literal: ["Literal reader", "Takes every reply at face value."]
+    },
+    criteria: {
+      or: "Reads “or” as a soft no, a pointer to an option already raised, or a request to explain.",
+      nonanswer: "Recovers the choice behind “yes”, “both?” or “wait no” instead of forcing an option.",
+      ordinal: "Binds letters and numbers to the list that defined them.",
+      anaphora: "Resolves “that” to the topic and treats “wait…” as a correction.",
+      constraint: "Keeps hard constraints from earlier turns; lets newer choices beat soft wishes.",
+      hedging: "Hears “sure…” and “why not” as the no they are."
+    }
+  },
+  zh: {
+    title: "FrontierHuman · 他到底什么意思？",
+    research: "研究",
+    h1: "他到底什么<mark>意思？</mark>",
+    demoQ: "要我删掉旧的 migration 吗？",
+    demoA: "还是…",
+    agent: "智能体",
+    human: "人类",
+    start: (n) => `开始 ${n} 题 →`,
+    resume: "继续",
+    report: "报告",
+    next: "下一题 →",
+    finish: "完成",
+    prev: "上一题",
+    progress: "进度",
+    choices: "解读",
+    vs: "对比",
+    you: "你",
+    strongAgent: "强智能体",
+    literalReader: "字面读者",
+    rubric: "评分标准",
+    category: "类别",
+    difficulty: "难度",
+    review: "逐题回顾",
+    all: "全部",
+    allItems: "全部题目",
+    missedItems: "答错的题",
+    correctItems: "答对的题",
+    correct: "答对",
+    missed: "答错",
+    intended: "本意",
+    yourPick: "你的选择",
+    retake: "重测",
+    takeIt: "去测一测 →",
+    copyLink: "复制链接",
+    copied: "已复制",
+    copyFailed: "复制失败",
+    magicLink: "报告链接",
+    share: "分享…",
+    wechat: "微信",
+    weibo: "微博",
+    scan: "微信扫一扫",
+    badLink: "链接无效。",
+    oldLink: "旧版链接，题目已更新。",
+    shareText: (s, n, v) => `我在 FrontierHuman 拿了 ${s}/${n}：${v}。他到底什么意思？`,
+    bands: {
+      agent: ["智能体级意图识别", "能像强智能体一样读懂没选的回答、反转和语气。"],
+      strong: ["默契搭档", "大多可靠；线索分散或遇到聪明折中时会失手。"],
+      context: ["能读语境", "会用上下文，但常按字面理解。"],
+      leaning: ["偏字面", "多数时候回应的是字面，而不是人。"],
+      literal: ["字面读者", "每句回复都按字面理解。"]
+    },
+    criteria: {
+      or: "能把“还是…”读成委婉拒绝、指向已提过的方案，或请你解释。",
+      nonanswer: "能从“嗯”“两个都？”“等等，不对”里还原真实选择，而不是硬选一个。",
+      ordinal: "把字母和数字对应到定义它们的那个列表。",
+      anaphora: "把“那个”对应到话题本身，把“等等…”当作更正。",
+      constraint: "守住早先的硬约束；让更新的选择胜过软偏好。",
+      hedging: "听得出“行吧……”和“反正不差这一个”其实是不要。"
+    }
+  }
+};
+
 const app = document.getElementById("app");
-let data = null;
+let base = null;
+let zh = null;
+let lang = document.documentElement.lang.startsWith("zh") ? "zh" : "en";
 let state = loadState();
 let reviewFilter = "all";
+let view = { name: "intro" };
+
+const t = (key) => I18N[lang][key];
 
 function loadState() {
   try {
@@ -37,44 +167,105 @@ function esc(s) {
 }
 
 function el(html) {
-  const t = document.createElement("template");
-  t.innerHTML = html.trim();
-  return t.content;
-}
-
-function render(view) {
-  app.replaceChildren(view);
-  window.scrollTo(0, 0);
+  const tpl = document.createElement("template");
+  tpl.innerHTML = html.trim();
+  return tpl.content;
 }
 
 function pad(n) {
   return String(n).padStart(2, "0");
 }
 
-function turnHtml(who, text, cls = "") {
-  return `<div class="turn ${cls}"><div class="who">${who}</div><div class="text">${esc(text)}</div></div>`;
+/* ---------- Data ---------- */
+
+function items() {
+  return base.items;
 }
 
-function chatHtml(item) {
-  const history = (item.history || []).map((m) => turnHtml(m.who === "user" ? "Human" : "Agent", m.text, "past")).join("");
-  return `<div class="chat">${history}${turnHtml("Agent", item.question)}${turnHtml("Human", item.reply, "reply")}</div>`;
+function text(item) {
+  if (lang !== "zh") return item;
+  const z = zh.items[item.id];
+  return {
+    ...item,
+    ...z,
+    history: item.history.map((m, k) => ({ who: m.who, text: z.history[k] }))
+  };
 }
 
-/* ---------- Theme ---------- */
+function labels(kind) {
+  return lang === "zh" ? zh[kind] : base[kind];
+}
+
+/* ---------- Magic link ---------- */
+
+function b64urlEncode(bytes) {
+  let s = "";
+  bytes.forEach((b) => (s += String.fromCharCode(b)));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function b64urlDecode(str) {
+  if (!/^[A-Za-z0-9_-]+$/.test(str)) return null;
+  try {
+    const s = atob(str.replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from(s, (c) => c.charCodeAt(0));
+  } catch {
+    return null;
+  }
+}
+
+function checksum(bytes) {
+  return bytes.reduce((acc, b) => (acc * 31 + b + 7) & 255, 0x5a);
+}
+
+function encodeAnswers(answers) {
+  const n = answers.length;
+  const bytes = new Uint8Array(Math.ceil(n / 4) + 1);
+  answers.forEach((a, i) => (bytes[i >> 2] |= (a & 3) << ((i & 3) * 2)));
+  bytes[bytes.length - 1] = checksum(bytes.subarray(0, bytes.length - 1));
+  return `${base.version}.${b64urlEncode(bytes)}`;
+}
+
+function decodeAnswers(code) {
+  const m = /^(\d+)\.([A-Za-z0-9_-]+)$/.exec(code || "");
+  if (!m) return { error: "bad" };
+  if (Number(m[1]) !== base.version) return { error: "old" };
+  const bytes = b64urlDecode(m[2]);
+  const n = items().length;
+  if (!bytes || bytes.length !== Math.ceil(n / 4) + 1) return { error: "bad" };
+  if (checksum(bytes.subarray(0, bytes.length - 1)) !== bytes[bytes.length - 1]) return { error: "bad" };
+  const answers = [];
+  for (let i = 0; i < n; i++) answers.push((bytes[i >> 2] >> ((i & 3) * 2)) & 3);
+  return { answers };
+}
+
+function magicLink(code) {
+  return `${location.origin}${location.pathname}?r=${code}`;
+}
+
+function answersFromState() {
+  return items().map((it) => state.answers[it.id]);
+}
+
+/* ---------- Chrome: theme + language ---------- */
 
 const themeBtn = document.getElementById("theme");
 
-function syncThemeButton() {
+function syncChrome() {
   const dark = document.documentElement.dataset.theme === "dark";
-  themeBtn.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+  themeBtn.setAttribute("aria-label", lang === "zh" ? (dark ? "切换到浅色" : "切换到深色") : dark ? "Switch to light theme" : "Switch to dark theme");
   themeBtn.setAttribute("aria-pressed", String(dark));
+  document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  document.querySelectorAll("[data-i18n]").forEach((n) => (n.textContent = t(n.dataset.i18n)));
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.title = t("title");
 }
 
 themeBtn.addEventListener("click", () => {
   const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = next;
   try { localStorage.setItem(THEME_KEY, next); } catch {}
-  syncThemeButton();
+  syncChrome();
 });
 
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
@@ -82,34 +273,81 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
   try { saved = localStorage.getItem(THEME_KEY); } catch {}
   if (saved) return;
   document.documentElement.dataset.theme = e.matches ? "dark" : "light";
-  syncThemeButton();
+  syncChrome();
 });
 
-syncThemeButton();
+document.querySelectorAll("[data-lang]").forEach((b) =>
+  b.addEventListener("click", () => {
+    if (b.dataset.lang === lang) return;
+    lang = b.dataset.lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch {}
+    syncChrome();
+    if (base) rerender();
+  })
+);
+
+syncChrome();
+
+/* ---------- Rendering ---------- */
+
+function show(next, fragment) {
+  view = next;
+  app.replaceChildren(fragment);
+  window.scrollTo(0, 0);
+}
+
+function rerender() {
+  const y = window.scrollY;
+  switch (view.name) {
+    case "intro":
+      renderIntro();
+      break;
+    case "question":
+      renderQuestion();
+      break;
+    case "report":
+      renderReport(view.answers, view.shared);
+      break;
+    case "notice":
+      renderNotice(view.kind);
+      break;
+  }
+  window.scrollTo(0, y);
+}
+
+function turnHtml(who, txt, cls = "") {
+  return `<div class="turn ${cls}"><div class="who">${who}</div><div class="text">${esc(txt)}</div></div>`;
+}
+
+function chatHtml(item) {
+  const history = item.history.map((m) => turnHtml(m.who === "user" ? t("human") : t("agent"), m.text, "past")).join("");
+  return `<div class="chat">${history}${turnHtml(t("agent"), item.question)}${turnHtml(t("human"), item.reply, "reply")}</div>`;
+}
 
 /* ---------- Intro ---------- */
 
 function renderIntro() {
   const answered = Object.keys(state.answers).length;
-  const total = data.items.length;
+  const total = items().length;
   const secondary = state.finished
-    ? `<button class="btn" data-go="report">Report</button>`
+    ? `<button class="btn" data-go="report">${t("report")}</button>`
     : answered > 0
-      ? `<button class="btn" data-go="resume">Resume ${pad(answered)}/${total}</button>`
+      ? `<button class="btn" data-go="resume">${t("resume")} ${pad(answered)}/${total}</button>`
       : "";
 
-  render(
+  show(
+    { name: "intro" },
     el(`
     <section class="intro">
-      <h1>What did they <mark>mean?</mark></h1>
+      <h1>${t("h1")}</h1>
       <div class="demo box">
         <div class="chat">
-          ${turnHtml("Agent", "Should I delete the old migration?")}
-          ${turnHtml("Human", "or", "reply")}
+          ${turnHtml(t("agent"), t("demoQ"))}
+          ${turnHtml(t("human"), t("demoA"), "reply")}
         </div>
       </div>
       <div class="actions">
-        <button class="btn btn-accent btn-xl" data-go="start">Start ${total} →</button>
+        <button class="btn btn-accent btn-xl" data-go="start">${t("start")(total)}</button>
         ${secondary}
       </div>
     </section>
@@ -120,27 +358,25 @@ function renderIntro() {
 /* ---------- Exam ---------- */
 
 function renderQuestion() {
-  const total = data.items.length;
+  const list = items();
+  const total = list.length;
   const i = Math.min(state.index, total - 1);
-  const item = data.items[i];
+  const item = text(list[i]);
   const selected = state.answers[item.id];
+  const cells = list.map((it, k) => `<i class="${k === i ? "now" : state.answers[it.id] !== undefined ? "done" : ""}"></i>`).join("");
 
-  const cells = data.items
-    .map((it, k) => `<i class="${k === i ? "now" : state.answers[it.id] !== undefined ? "done" : ""}"></i>`)
-    .join("");
-
-  render(
+  show(
+    { name: "question" },
     el(`
     <section>
       <div class="exam-top">
         <div class="counter">${pad(i + 1)}<small>/${total}</small></div>
-        <div class="cells" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${Object.keys(state.answers).length}">${cells}</div>
+        <div class="cells" role="progressbar" aria-label="${t("progress")}" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${Object.keys(state.answers).length}">${cells}</div>
       </div>
-
       <div class="q box">
         <div class="context">${esc(item.context)}</div>
         ${chatHtml(item)}
-        <div class="options" role="radiogroup" aria-label="Interpretations">
+        <div class="options" role="radiogroup" aria-label="${t("choices")}">
           ${item.options
             .map(
               (o, k) => `
@@ -151,10 +387,9 @@ function renderQuestion() {
             .join("")}
         </div>
       </div>
-
       <div class="exam-nav">
-        <button class="btn" data-go="prev" aria-label="Previous question" ${i === 0 ? "disabled" : ""}>←</button>
-        <button class="btn btn-accent" data-go="next" ${selected === undefined ? "disabled" : ""}>${i === total - 1 ? "Finish" : "Next →"}</button>
+        <button class="btn" data-go="prev" aria-label="${t("prev")}" ${i === 0 ? "disabled" : ""}>←</button>
+        <button class="btn btn-accent" data-go="next" ${selected === undefined ? "disabled" : ""}>${i === total - 1 ? t("finish") : t("next")}</button>
       </div>
     </section>
   `)
@@ -162,7 +397,7 @@ function renderQuestion() {
 }
 
 function choose(k) {
-  const item = data.items[state.index];
+  const item = items()[state.index];
   state.answers[item.id] = k;
   saveState();
   app.querySelectorAll(".option").forEach((b) => {
@@ -175,16 +410,16 @@ function choose(k) {
 }
 
 function next() {
-  const item = data.items[state.index];
+  const item = items()[state.index];
   if (state.answers[item.id] === undefined) return;
-  if (state.index < data.items.length - 1) {
+  if (state.index < items().length - 1) {
     state.index += 1;
     saveState();
     renderQuestion();
   } else {
     state.finished = true;
     saveState();
-    renderReport();
+    openReport(answersFromState(), false);
   }
 }
 
@@ -198,88 +433,148 @@ function prev() {
 
 /* ---------- Report ---------- */
 
-function scoreFor(pick) {
-  return data.items.reduce((s, it) => s + (pick(it) === it.correct ? 1 : 0), 0);
+function bandFor(score) {
+  return BANDS.find((b) => score >= b.min);
 }
 
-function groupScores(key) {
+function score(answers) {
+  return items().reduce((s, it, i) => s + (answers[i] === it.correct ? 1 : 0), 0);
+}
+
+function meterRow(name, value, max, cls = "", sub = "") {
+  return `<div class="row ${cls}"><div class="name">${esc(name)}${sub ? `<small>${esc(sub)}</small>` : ""}</div><div class="meter"><span style="width:${(value / max) * 100}%"></span></div><div class="val">${value}/${max}</div></div>`;
+}
+
+function groupScores(answers, key) {
   const groups = {};
-  for (const it of data.items) {
+  items().forEach((it, i) => {
     const g = (groups[it[key]] ||= { n: 0, you: 0 });
     g.n += 1;
-    if (state.answers[it.id] === it.correct) g.you += 1;
-  }
+    if (answers[i] === it.correct) g.you += 1;
+  });
   return groups;
 }
 
-function verdictFor(score) {
-  return VERDICTS.find((v) => score >= v.min);
+function openReport(answers, shared) {
+  const code = encodeAnswers(answers);
+  history.replaceState(null, "", `?r=${code}`);
+  renderReport(answers, shared);
 }
 
-function meterRow(name, value, max, cls = "") {
-  return `<div class="row ${cls}"><div class="name">${esc(name)}</div><div class="meter"><span style="width:${(value / max) * 100}%"></span></div><div class="val">${value}/${max}</div></div>`;
+function shareTargets(link, msg) {
+  const u = encodeURIComponent(link);
+  const m = encodeURIComponent(msg);
+  return {
+    x: `https://x.com/intent/tweet?text=${m}&url=${u}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+    reddit: `https://www.reddit.com/submit?url=${u}&title=${m}`,
+    weibo: `https://service.weibo.com/share/share.php?url=${u}&title=${m}`
+  };
 }
 
-function breakdownHtml(groups, labels) {
-  return Object.keys(labels)
-    .filter((k) => groups[k])
-    .map((k) => meterRow(labels[k].label, groups[k].you, groups[k].n))
-    .join("");
+function qrSvg(link) {
+  if (typeof window.qrcode !== "function") return "";
+  const qr = window.qrcode(0, "M");
+  qr.addData(link);
+  qr.make();
+  return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true, alt: t("scan") });
 }
 
-function renderReport() {
-  const total = data.items.length;
-  const you = scoreFor((it) => state.answers[it.id]);
-  const literal = scoreFor((it) => it.literal);
-  const verdict = verdictFor(you);
+function renderReport(answers, shared) {
+  const list = items();
+  const total = list.length;
+  const you = score(answers);
+  const literal = list.reduce((s, it) => s + (it.literal === it.correct ? 1 : 0), 0);
+  const band = bandFor(you);
+  const verdict = t("bands")[band.id][0];
+  const code = encodeAnswers(answers);
+  const link = magicLink(code);
+  const msg = t("shareText")(you, total, verdict);
+  const targets = shareTargets(link, msg);
+  const cats = labels("categories");
+  const diffs = labels("difficulties");
+  const catScores = groupScores(answers, "category");
+  const diffScores = groupScores(answers, "difficulty");
 
-  render(
+  show(
+    { name: "report", answers, shared },
     el(`
     <section>
       <div class="score">
-        <div class="num" aria-label="${you} of ${total}">${you}<small>/${total}</small></div>
-        <div class="verdict">${esc(verdict.name)}</div>
+        <div class="num" aria-label="${you} / ${total}">${you}<small>/${total}</small></div>
+        <div class="verdict">${esc(verdict)}</div>
       </div>
 
-      <h2 class="h2">vs.</h2>
+      <div class="share">
+        <div class="link">
+          <input id="magic" type="text" readonly value="${esc(link)}" aria-label="${t("magicLink")}" />
+          <button data-go="copy">${t("copyLink")}</button>
+        </div>
+        <div class="socials">
+          <a href="${targets.x}" target="_blank" rel="noopener" data-share="x">X</a>
+          <a href="${targets.linkedin}" target="_blank" rel="noopener" data-share="linkedin">LinkedIn</a>
+          <a href="${targets.facebook}" target="_blank" rel="noopener" data-share="facebook">Facebook</a>
+          <a href="${targets.reddit}" target="_blank" rel="noopener" data-share="reddit">Reddit</a>
+          <a href="${targets.weibo}" target="_blank" rel="noopener" data-share="weibo">${t("weibo")}</a>
+          <button data-go="wechat" aria-expanded="false" aria-controls="qr">${t("wechat")}</button>
+          ${navigator.share ? `<button data-go="native">${t("share")}</button>` : ""}
+        </div>
+        <div class="qr" id="qr" hidden>
+          <div class="code">${qrSvg(link)}</div>
+          <div class="scan">${t("scan")}</div>
+        </div>
+      </div>
+
+      <h2 class="h2">${t("rubric")}</h2>
+      <div class="table bands">
+        ${BANDS.map((b) => `<div class="row ${b === band ? "on" : ""}" ${b === band ? 'aria-current="true"' : ""}><div class="range">${b.min}–${b.max}</div><div class="band">${esc(t("bands")[b.id][0])}</div><div class="mean">${esc(t("bands")[b.id][1])}</div></div>`).join("")}
+      </div>
+
+      <h2 class="h2">${t("vs")}</h2>
       <div class="table">
-        ${meterRow("You", you, total, "you")}
-        ${meterRow("Strong agent", total, total)}
-        ${meterRow("Literal reader", literal, total)}
+        ${meterRow(t("you"), you, total, "you")}
+        ${meterRow(t("strongAgent"), total, total)}
+        ${meterRow(t("literalReader"), literal, total)}
       </div>
 
-      <div class="split">
-        <div>
-          <h2 class="h2">Category</h2>
-          <div class="table">${breakdownHtml(groupScores("category"), data.categories)}</div>
-        </div>
-        <div>
-          <h2 class="h2">Difficulty</h2>
-          <div class="table">${breakdownHtml(groupScores("difficulty"), data.difficulties)}</div>
-        </div>
+      <h2 class="h2">${t("category")}</h2>
+      <div class="table crit">
+        ${Object.keys(cats)
+          .filter((k) => catScores[k])
+          .map((k) => meterRow(cats[k].label, catScores[k].you, catScores[k].n, "", t("criteria")[k]))
+          .join("")}
       </div>
 
-      <h2 class="h2">Review</h2>
+      <h2 class="h2">${t("difficulty")}</h2>
+      <div class="table crit">
+        ${Object.keys(diffs)
+          .filter((k) => diffScores[k])
+          .map((k) => meterRow(diffs[k].label, diffScores[k].you, diffScores[k].n))
+          .join("")}
+      </div>
+
+      <h2 class="h2">${t("review")}</h2>
       <div class="filters">
-        <button data-filter="all" class="${reviewFilter === "all" ? "on" : ""}" aria-label="All items">All</button>
-        <button data-filter="missed" class="${reviewFilter === "missed" ? "on" : ""}" aria-label="Missed items">✕ ${total - you}</button>
-        <button data-filter="correct" class="${reviewFilter === "correct" ? "on" : ""}" aria-label="Correct items">✓ ${you}</button>
+        <button data-filter="all" class="${reviewFilter === "all" ? "on" : ""}" aria-label="${t("allItems")}">${t("all")}</button>
+        <button data-filter="missed" class="${reviewFilter === "missed" ? "on" : ""}" aria-label="${t("missedItems")}">✕ ${total - you}</button>
+        <button data-filter="correct" class="${reviewFilter === "correct" ? "on" : ""}" aria-label="${t("correctItems")}">✓ ${you}</button>
       </div>
-      <div class="review" id="review">${reviewHtml()}</div>
+      <div class="review" id="review">${reviewHtml(answers)}</div>
 
       <div class="report-actions">
-        <button class="btn btn-accent" data-go="retake">Retake</button>
-        <button class="btn" data-go="copy">Copy</button>
+        <button class="btn btn-accent" data-go="retake">${shared ? t("takeIt") : t("retake")}</button>
       </div>
     </section>
   `)
   );
 }
 
-function reviewHtml() {
-  return data.items
-    .map((it, i) => {
-      const pick = state.answers[it.id];
+function reviewHtml(answers) {
+  return items()
+    .map((raw, i) => {
+      const it = text(raw);
+      const pick = answers[i];
       const ok = pick === it.correct;
       if (reviewFilter === "missed" && ok) return "";
       if (reviewFilter === "correct" && !ok) return "";
@@ -287,14 +582,15 @@ function reviewHtml() {
         .map((o, k) => {
           const cls = k === it.correct ? "correct" : k === pick ? "wrong" : "";
           const tag = k === it.correct ? "✓" : k === pick ? "✕" : "";
-          return `<div class="opt ${cls}"><span class="letter">${LETTERS[k]}</span><span class="label">${esc(o)}</span><span class="tag" aria-label="${k === it.correct ? "intended" : k === pick ? "your pick" : ""}">${tag}</span></div>`;
+          const aria = k === it.correct ? t("intended") : k === pick ? t("yourPick") : "";
+          return `<div class="opt ${cls}"><span class="letter">${LETTERS[k]}</span><span class="label">${esc(o)}</span><span class="tag"${aria ? ` aria-label="${aria}"` : ""}>${tag}</span></div>`;
         })
         .join("");
       return `
       <details class="item ${ok ? "hit" : "miss"}">
         <summary>
           <span class="n">${pad(i + 1)}</span>
-          <span class="mark" aria-label="${ok ? "correct" : "missed"}">${ok ? "✓" : "✕"}</span>
+          <span class="mark" aria-label="${ok ? t("correct") : t("missed")}">${ok ? "✓" : "✕"}</span>
           <span class="r">${esc(it.reply)}</span>
           <span class="pick">${pick === undefined ? "–" : LETTERS[pick]}</span>
         </summary>
@@ -310,27 +606,44 @@ function reviewHtml() {
     .join("");
 }
 
-function copyResult() {
-  const total = data.items.length;
-  const you = scoreFor((it) => state.answers[it.id]);
-  const grid = data.items.map((it) => (state.answers[it.id] === it.correct ? "■" : "□")).join("");
-  const text = `FrontierHuman ${you}/${total} · ${verdictFor(you).name}\n${grid}\n${location.origin}${location.pathname}`;
-  navigator.clipboard?.writeText(text).then(
-    () => toast("Copied"),
-    () => toast("Copy failed")
+function renderNotice(kind) {
+  show(
+    { name: "notice", kind },
+    el(`
+    <section class="notice">
+      <h1>${kind === "old" ? t("oldLink") : t("badLink")}</h1>
+      <button class="btn btn-accent btn-xl" data-go="home">${t("start")(items().length)}</button>
+    </section>
+  `)
   );
 }
 
 function toast(msg) {
-  const t = document.createElement("div");
-  t.className = "toast";
-  t.setAttribute("role", "status");
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 1400);
+  const n = document.createElement("div");
+  n.className = "toast";
+  n.setAttribute("role", "status");
+  n.textContent = msg;
+  document.body.appendChild(n);
+  setTimeout(() => n.remove(), 1400);
+}
+
+async function copyLink() {
+  const input = document.getElementById("magic");
+  try {
+    await navigator.clipboard.writeText(input.value);
+    toast(t("copied"));
+  } catch {
+    input.select();
+    toast(document.execCommand && document.execCommand("copy") ? t("copied") : t("copyFailed"));
+  }
 }
 
 /* ---------- Events ---------- */
+
+function goHome() {
+  history.replaceState(null, "", location.pathname);
+  renderIntro();
+}
 
 app.addEventListener("click", (e) => {
   const opt = e.target.closest("[data-opt]");
@@ -340,7 +653,7 @@ app.addEventListener("click", (e) => {
   if (filter) {
     reviewFilter = filter.dataset.filter;
     app.querySelectorAll("[data-filter]").forEach((b) => b.classList.toggle("on", b === filter));
-    document.getElementById("review").innerHTML = reviewHtml();
+    document.getElementById("review").innerHTML = reviewHtml(view.answers);
     return;
   }
 
@@ -349,13 +662,14 @@ app.addEventListener("click", (e) => {
   switch (go.dataset.go) {
     case "start":
       resetState();
+      history.replaceState(null, "", location.pathname);
       renderQuestion();
       break;
     case "resume":
       renderQuestion();
       break;
     case "report":
-      renderReport();
+      openReport(answersFromState(), false);
       break;
     case "next":
       next();
@@ -363,20 +677,35 @@ app.addEventListener("click", (e) => {
     case "prev":
       prev();
       break;
+    case "home":
+      goHome();
+      break;
     case "retake":
       resetState();
       reviewFilter = "all";
-      renderIntro();
+      goHome();
       break;
     case "copy":
-      copyResult();
+      copyLink();
       break;
+    case "wechat": {
+      const panel = document.getElementById("qr");
+      panel.hidden = !panel.hidden;
+      go.setAttribute("aria-expanded", String(!panel.hidden));
+      break;
+    }
+    case "native": {
+      const link = document.getElementById("magic").value;
+      const you = score(view.answers);
+      navigator.share({ title: "FrontierHuman", text: t("shareText")(you, items().length, t("bands")[bandFor(you).id][0]), url: link }).catch(() => {});
+      break;
+    }
   }
 });
 
 document.querySelector('[data-action="home"]').addEventListener("click", (e) => {
   e.preventDefault();
-  if (data) renderIntro();
+  if (base) goHome();
 });
 
 document.addEventListener("keydown", (e) => {
@@ -395,16 +724,22 @@ document.addEventListener("keydown", (e) => {
 
 async function boot() {
   try {
-    const res = await fetch("data/items.json", { cache: "no-cache" });
-    data = await res.json();
+    const [en, z] = await Promise.all(["data/items.json", "data/items.zh.json"].map((u) => fetch(u, { cache: "no-cache" }).then((r) => r.json())));
+    base = en;
+    zh = z;
   } catch {
     app.textContent = "Couldn't load the exam.";
     return;
   }
   const params = new URLSearchParams(location.search);
   if (params.has("reset")) resetState();
-  if (state.finished && params.get("view") === "report") renderReport();
-  else renderIntro();
+  if (params.has("r")) {
+    const decoded = decodeAnswers(params.get("r"));
+    if (decoded.error) return renderNotice(decoded.error);
+    const mine = state.finished && encodeAnswers(answersFromState()) === encodeAnswers(decoded.answers);
+    return renderReport(decoded.answers, !mine);
+  }
+  renderIntro();
 }
 
 boot();
