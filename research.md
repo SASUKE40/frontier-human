@@ -24,7 +24,18 @@ FrontierHuman tests one narrow skill: an agent asks a clarifying question, the h
 - **Navigating Rifts in Human-LLM Grounding** (Shaikh et al., 2025): in WildChat, MultiWOZ, and Bing Chat logs, people are 3x more likely to clarify and 16x more likely to issue follow-ups than LLMs; early grounding failures cascade into later failures. [arXiv:2503.13975](https://arxiv.org/abs/2503.13975)
 - **LLMs Get Lost in Multi-Turn Conversation** (Laban et al., ICLR 2026): an average 39% drop from single-turn to multi-turn underspecified settings over 200K+ simulated conversations. Models "make assumptions in early turns", over-rely on them, and lose constraints stated earlier. [arXiv:2505.06120](https://arxiv.org/abs/2505.06120)
 
-## 4. Failure modes the items target
+## 4. Non-answers: "or", "yes", "both?", "sure…", "wait no"
+
+The hardest replies don't pick an option at all. Conversation analysis has studied each of these.
+
+- **Turn-final "or"** (Drake, *Research on Language and Social Interaction* 48(3), 2015). In natural American English, "Does that bring up jealousy for you **or**" is an *epistemic downgrade* with three jobs: (a) it makes a disconfirmation easy, (b) it gestures toward an alternative left unsaid, and (c) it is treated as needing elaboration. A human reply of just "or" to a yes/no question uses the same resource, so its meaning depends on context: a soft no, a pointer to an alternative already in the air, or a request to explain. "yes or" and "no or" lean one way while leaving that door open. [doi:10.1080/08351813.2015.1058606](https://doi.org/10.1080/08351813.2015.1058606)
+- **Preference organization** (Pomerantz 1984; Sacks 1987; Levinson 1983). Agreement comes quickly and plainly. Disagreement is delayed, softened, and prefaced with token agreement ("yes, but…", "well…"). A drawn-out "sure…" or "I mean… I guess" is the shape of a dispreferred answer, not a yes. Schegloff (1988) shows these pre-disagreements invite the first speaker to recast their proposal so the other person never has to say no. [Schegloff, *Discourse as an interactional achievement II* (PDF)](https://www.conversationanalysis.org/mp-files/discourse-as-interactional-achievement-ii-an-exercise-in-conversation-analysis.pdf/) · [emcawiki: Agreement](https://emcawiki.net/Agreement)
+- **Delayed and non-conforming answers** (Stivers et al., *PNAS* 2009). Across 10 languages, answers that don't fit the question's terms, or that go against its bias, come with measurable hesitation. Hesitation is a signal, not noise. [Universals and cultural variation in turn-taking (PDF)](https://cognitionandculture.net/wp-content/uploads/Stivers_2009_universals.pdf)
+- **Self-repair** (Schegloff, Jefferson & Sacks, *Language* 1977). Speakers prefer to fix their own talk, and the repair is often in progress mid-turn ("a, wait no"). An unfinished self-repair hasn't chosen anything yet. When both options are destructive, the reply may be rejecting the whole plan.
+- **Sycophancy and flip-flopping** (Hong et al., *SYCON-Bench*, Findings of EMNLP 2025; Sharma et al. 2023). Models change their stance under user pressure, and alignment tuning makes this worse. The mirror-image failure in this exam is overriding a user's *latest* explicit choice because of an earlier soft preference, or re-asking until the user gives in. [aclanthology.org/2025.findings-emnlp.121](https://aclanthology.org/2025.findings-emnlp.121.pdf)
+- **Pragmatic alternatives** (ALTPRAG, 2025): LLMs show emerging but imperfect sensitivity to why a speaker chose one phrasing over a near-equivalent. "or" vs. "or…?" vs. "no or" is exactly that kind of contrast. [arXiv:2505.18497](https://arxiv.org/abs/2505.18497)
+
+## 5. Failure modes the items target
 
 Distilled from the work above and from common coding-agent transcripts (Cursor, Claude Code, Copilot-style sessions where the agent offers "A or B?"):
 
@@ -32,16 +43,21 @@ Distilled from the work above and from common coding-agent transcripts (Cursor, 
 | --- | --- | --- |
 | Wrong ordinal binding | "b" / "the second one" bound to position in the latest sentence instead of the labeled list, or to prose order instead of the numbered recap | ClariQ elliptical answers; CLAMBER contextual-reference weakness |
 | Recency over salience | "yeah, fix that" bound to the most recently mentioned item instead of the item under discussion | CLAMBER pronoun findings; Clark & Wilkes-Gibbs referring as a joint act |
-| Scope creep / scope shrink | "just fix the bug" read as permission to migrate everything; "while you're in there" read too narrowly | Ambig-SWE assumption errors; HumanEvalComm incomplete specs |
-| Dropped earlier constraint | "whatever's simpler" answered without the constraint the user stated 10 turns ago (air-gapped, demo in 20 minutes) | Laban et al. multi-turn degradation |
-| Literal reading of hedges/sarcasm | "I guess, if it's needed?" or "oh sure, one more flag" treated as a yes | Grice; ACT overhedging/guessing |
-| Over-inference | A plain "leave 'em" turned into extra unrequested work | CLAMBER overconfidence; Ambig-SWE user-burden analysis |
+| Dropped earlier constraint | "whatever's simpler" answered without the constraint the user stated turns ago (air-gapped, demo in 20 minutes) | Laban et al. multi-turn degradation |
+| Literal reading of hedges/sarcasm | "I guess, if it's needed?", "sure…" or "oh sure, one more flag" treated as a yes | Grice; Pomerantz; ACT overhedging/guessing |
+| One reading of "or" for every context | "or" always treated as "or what?", or always as "offer an alternative" | Drake 2015: soft no vs. unsaid alternative vs. request to elaborate |
+| Non-answer forced into an option | "yes" to "CSV or Excel?" picked as one format; "both?" answered by prioritizing one platform | ClariQ; CLAMBER contradictions |
+| Retraction read as the other option | "a, wait no" executed as (b) when both options are destructive | Schegloff, Jefferson & Sacks 1977; Ambig-SWE safety risks |
+| Overriding a reversed preference | "b I guess" ignored because the user said "dependency-free if we can" earlier | SYCON-Bench stance dynamics |
+| Clever compromise nobody asked for | Refactor "in a separate commit", vendor one function, offer a lighter extra | Ambig-SWE user burden; CLAMBER overconfidence |
 | Ignored repair | "wait, that was supposed to be prod" treated as a new request rather than a correction of the last action | Shaikh et al. grounding acts and repair |
 
-## 5. Design principles for the items
+## 6. Design principles for the items
 
 1. **One defensible answer.** Every item has a cue in the context, question, or answer that a careful listener can point to. If two readings were equally plausible, a strong agent should ask again, so those items are excluded.
 2. **No trivia.** Domain knowledge is limited to what a working developer knows (what an API contract is, what air-gapped means). The difficulty comes from pragmatics.
 3. **Plausible distractors.** Each wrong option is a known failure mode from the table: the literal reading, the over-inference, the recency binding, the dropped constraint.
-4. **Some literal answers are right.** A few items reward taking the human at their word, so "always read between the lines" is not a winning strategy.
-5. **Baselines.** The *strong agent* reference answers every item from its cue (it is the answer key). The *literal reader* baseline picks the most surface-level reading of each reply, as authored per item (`literal` in `site/data/items.json`).
+4. **Hard by default (v2).** 15 of the 20 items are hard and none are easy. Hard items include at least one of: a distractor a strong model would pick (the clever compromise or the confident misbinding), cues spread across earlier turns, a reply that reverses an earlier preference, a label that refers to something other than it seems, a polite yes that means no, or a case where asking again is correct.
+5. **Same reply, different meaning.** The trailing-"or" family ("or", "or…?", "yes or", "no or") appears five times, and the two bare "or"s have opposite readings (soft no vs. an alternative already floated). "yes" appears twice (agree with the recommendation vs. both). Pattern-matching on the reply doesn't work.
+6. **Some literal answers are right**, and asking again is right only when the reply is truly unfinished or the agent knows a risk the user hasn't weighed.
+7. **Baselines.** The *strong agent* reference answers every item from its cue (it is the answer key). The *literal reader* baseline picks the most surface-level reading of each reply, as authored per item (`literal` in `site/data/items.json`).

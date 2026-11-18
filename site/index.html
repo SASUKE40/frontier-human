@@ -3,33 +3,33 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FrontierHuman · Intent-detection benchmark</title>
-  <meta name="description" content="An agent asks a clarifying question. The human answers &quot;b&quot;. Can you work out what they meant, the way a strong agent would?" />
-  <meta name="theme-color" content="#0b0d12" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%237c5cff'/><text x='50%' y='56%' font-size='34' text-anchor='middle' dominant-baseline='middle' font-family='system-ui' font-weight='700' fill='white'>?</text></svg>" />
+  <title>FrontierHuman</title>
+  <meta name="description" content="An agent asks a clarifying question. The human answers &quot;or&quot;. What did they mean?" />
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("frontierhuman:theme"); } catch (e) {}
+      if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23ea4a0f'/><text x='50%' y='58%' font-size='44' text-anchor='middle' dominant-baseline='middle' font-family='Arial' font-weight='900' fill='black'>?</text></svg>" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="bg-glow" aria-hidden="true"></div>
-
-  <header class="topbar">
-    <a class="brand" href="./" data-action="home">
-      <span class="brand-mark">?</span>
-      <span>Frontier<strong>Human</strong></span>
-    </a>
-    <nav class="topnav">
+  <header class="bar">
+    <a class="brand" href="./" data-action="home">FRONTIER<span>HUMAN</span></a>
+    <nav class="nav">
       <a href="https://github.com/SASUKE40/frontier-human/blob/main/research.md" target="_blank" rel="noopener">Research</a>
       <a href="https://github.com/SASUKE40/frontier-human" target="_blank" rel="noopener">GitHub</a>
+      <button class="theme" id="theme" type="button" aria-label="Switch theme"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M11 2a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
     </nav>
   </header>
 
   <main id="app" aria-live="polite">
-    <noscript><p class="card">FrontierHuman needs JavaScript to run the exam.</p></noscript>
+    <noscript><p>FrontierHuman needs JavaScript.</p></noscript>
   </main>
-
-  <footer class="footer">
-    <span>FrontierHuman · 20 items · no backend, nothing leaves your browser</span>
-  </footer>
 
   <script src="app.js" type="module"></script>
 </body>

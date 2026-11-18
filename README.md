@@ -1,12 +1,13 @@
 # FrontierHuman
 
-An intent-detection benchmark for humans. An AI agent asks a clarifying question ("A or B?"), the human answers tersely ("b", "yeah that", "whatever's simpler"), and you pick what they actually meant, the way a strong agent would.
+An intent-detection benchmark for humans. An AI agent asks a clarifying question ("Should I delete the old migration?"), the human answers tersely ("or", "yes", "b I guess", "a, wait no"), and you pick what they actually meant, the way a strong agent would.
 
 **Take it:** https://edward40.com/frontier-human/
 
-- 20 items across six categories: ordinal reference, pointers & repair, scope, implicit constraint, delegated choice, sarcasm & hedging.
-- Mixed difficulty (5 easy, 10 medium, 5 hard). Each wrong option is a documented agent failure mode.
+- 20 items across six categories: trailing "or", non-answers, ordinal reference, pointers & repair, implicit constraint, sarcasm & hedging.
+- 15 hard and 5 medium. Each wrong option is a documented agent failure mode, and many are the answer a strong model would give.
 - The report shows your score, category and difficulty breakdowns, a verdict band, a comparison with strong-agent and literal-reader baselines, and an explanation for every item.
+- Brutalist design with light and dark themes (follows `prefers-color-scheme`; the toggle choice is saved).
 
 ## Layout
 
