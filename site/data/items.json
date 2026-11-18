@@ -1,0 +1,440 @@
+{
+  "version": 1,
+  "categories": {
+    "ordinal": { "label": "Ordinal reference", "blurb": "Letters, numbers, and \"the second one\": what are they bound to?" },
+    "anaphora": { "label": "Pointers & repair", "blurb": "\"that\", \"the other one\", \"wait, that was…\": what is being pointed at or corrected?" },
+    "scope": { "label": "Scope", "blurb": "How much work the reply authorizes: less, more, or exactly what was offered." },
+    "constraint": { "label": "Implicit constraint", "blurb": "A requirement stated earlier, or implied by a consequence, that decides the choice." },
+    "delegation": { "label": "Delegated choice", "blurb": "\"your call\", \"whatever's simpler\": what the human would pick if they thought about it." },
+    "hedging": { "label": "Sarcasm & hedging", "blurb": "Tone that flips or softens the literal words." }
+  },
+  "difficulties": {
+    "easy": { "label": "Easy" },
+    "medium": { "label": "Medium" },
+    "hard": { "label": "Hard" }
+  },
+  "items": [
+    {
+      "id": "fh-01",
+      "category": "ordinal",
+      "difficulty": "easy",
+      "context": "Fixing a flaky integration test in a Node service.",
+      "history": [
+        { "who": "user", "text": "test_checkout keeps failing randomly in CI, can you fix it" }
+      ],
+      "question": "The failure comes from a real HTTP call to the payments sandbox timing out. Two ways to fix it: (A) wrap the call in a retry with backoff, or (B) mock the payments client in this test so it never hits the network. Which do you prefer?",
+      "reply": "b",
+      "options": [
+        "Add a retry with backoff around the payments call",
+        "Mock the payments client in test_checkout so it never hits the network",
+        "Mock the payments client across the entire test suite",
+        "Do both: mock the client and add retries as a safety net"
+      ],
+      "correct": 1,
+      "literal": 1,
+      "cue": "\"b\" binds to the option the agent explicitly labeled (B).",
+      "explanation": "The baseline case: the agent labeled its options, so a one-letter reply is complete. The distractors are the over-inference traps: widening the mock to the whole suite, or doing both. Neither was offered.",
+      "grounding": "Clark & Brennan: least collaborative effort makes one-letter answers rational once labels are shared."
+    },
+    {
+      "id": "fh-02",
+      "category": "delegation",
+      "difficulty": "easy",
+      "context": "Adding configuration for a new feature-flag service.",
+      "history": [],
+      "question": "I need a config file for the flag service. YAML or TOML? For reference, the repo already has config/app.yaml, config/db.yaml and config/queue.yaml.",
+      "reply": "dealer's choice",
+      "options": [
+        "TOML, since the agent is free to pick and TOML is less error-prone",
+        "JSON, as a neutral compromise between the two",
+        "YAML, matching the three existing config files",
+        "Ask again, since the user didn't actually choose"
+      ],
+      "correct": 2,
+      "literal": 3,
+      "cue": "The agent pointed out three existing .yaml configs right before the user delegated the choice.",
+      "explanation": "Delegation isn't permission to follow your own taste. The context points to a default: match the repo's convention. Asking again ignores an answer the user did give, and picking TOML or JSON adds inconsistency nobody asked for.",
+      "grounding": "Ambig-SWE: strong agents infer what the codebase already tells them instead of re-asking."
+    },
+    {
+      "id": "fh-03",
+      "category": "anaphora",
+      "difficulty": "easy",
+      "context": "Implementing account deletion.",
+      "history": [],
+      "question": "Two options for deleting accounts: (A) soft-delete with a deleted_at column, or (B) hard-delete the rows and write an entry to an audit_log table. I'd recommend A since it's reversible. Sound good?",
+      "reply": "nah the other one",
+      "options": [
+        "Hard-delete the rows and write an audit_log entry (option B)",
+        "Soft-delete with deleted_at (option A), since the user said \"one\"",
+        "Hard-delete the rows without any audit log",
+        "Combine them: soft-delete now and hard-delete after 30 days"
+      ],
+      "correct": 0,
+      "literal": 0,
+      "cue": "\"nah\" rejects the recommendation (A), so \"the other one\" can only be B.",
+      "explanation": "With two options and one rejected, \"the other one\" is unambiguous. B includes the audit log, so dropping it changes the option. Inventing a hybrid is over-inference.",
+      "grounding": "ClariQ: many real user answers are negations that only make sense against the offered options."
+    },
+    {
+      "id": "fh-04",
+      "category": "scope",
+      "difficulty": "medium",
+      "context": "A date-formatting bug in a React app.",
+      "history": [
+        { "who": "user", "text": "invoice dates show one day early for users in the US, fix pls" }
+      ],
+      "question": "Found it: utils/date.ts uses moment in a way that drops the timezone. moment is deprecated and is imported in 14 files. Should I replace it with date-fns just in utils/date.ts, or everywhere?",
+      "reply": "just fix the bug",
+      "options": [
+        "Replace moment with date-fns in all 14 files",
+        "Replace moment in utils/date.ts now and open a follow-up PR migrating the other 13 files",
+        "Ask which bug they mean, since several files use moment",
+        "Make the smallest change in utils/date.ts that fixes the timezone bug, and leave the moment migration alone"
+      ],
+      "correct": 3,
+      "literal": 0,
+      "cue": "\"just\" sets the scope at the bug, below either option the agent offered.",
+      "explanation": "The user didn't pick A or B. They rejected the framing. \"Just fix the bug\" means the migration is out of scope, even for the one file. A follow-up PR is still work they didn't ask for. The bug was named in the first message, so there's nothing to ask about.",
+      "grounding": "HumanEvalComm / Ambig-SWE: agents tend to over-assume scope. Here the user explicitly narrows it."
+    },
+    {
+      "id": "fh-05",
+      "category": "hedging",
+      "difficulty": "medium",
+      "context": "Adding retry behavior to an HTTP client. Earlier in this session the agent added six new config flags.",
+      "history": [
+        { "who": "agent", "text": "Added RETRY_MAX, RETRY_BASE_MS, RETRY_JITTER, RETRY_ON_429, RETRY_ON_5XX and RETRY_LOG_LEVEL to config." }
+      ],
+      "question": "Should I also add a flag to toggle the new retry behavior on and off?",
+      "reply": "oh sure, one more flag, why not",
+      "options": [
+        "Add the toggle flag",
+        "Don't add the flag; retries stay on by default",
+        "Add the flag and document all seven flags in the README",
+        "Add the flag but remove RETRY_LOG_LEVEL so the total stays at six"
+      ],
+      "correct": 1,
+      "literal": 0,
+      "cue": "\"oh sure… why not\" after six new flags is sarcasm: the user is complaining about the number of flags.",
+      "explanation": "The literal words say yes, but the delivery says no. A strong agent reads the history (six flags just added) and the ironic framing, skips the toggle, and keeps the default behavior. Swapping one flag for another misses the point.",
+      "grounding": "Grice: flouting Quantity/Manner signals implied meaning. ACT: models often take the surface reading."
+    },
+    {
+      "id": "fh-06",
+      "category": "scope",
+      "difficulty": "easy",
+      "context": "Shipping a v2 of an internal API.",
+      "history": [],
+      "question": "v2 endpoints are done. Do you want me to also delete the old /v1 endpoints, or leave them?",
+      "reply": "leave em",
+      "options": [
+        "Leave /v1 in place but add deprecation warnings to every response",
+        "Leave /v1 but move it into a legacy/ folder to keep the tree clean",
+        "Leave /v1 untouched",
+        "Delete /v1, since v2 replaces it"
+      ],
+      "correct": 2,
+      "literal": 2,
+      "cue": "The choice was binary (delete or leave) and the user picked \"leave\".",
+      "explanation": "Here the literal reading is the correct one. Adding deprecation headers or moving files is unrequested work wearing the word \"leave\". Strong agents don't over-read plain answers.",
+      "grounding": "CLAMBER: prompting tricks can make models overconfident. Over-inference is a failure too."
+    },
+    {
+      "id": "fh-07",
+      "category": "ordinal",
+      "difficulty": "medium",
+      "context": "A slow dashboard view in a web app that also has a mobile client.",
+      "history": [],
+      "question": "We could keep the REST endpoint and add pagination, or switch this view to the GraphQL query that already exists. GraphQL means less new code; pagination keeps the mobile app untouched. So: 1) GraphQL, 2) REST + pagination?",
+      "reply": "2nd",
+      "options": [
+        "Keep REST and add pagination",
+        "Switch the view to the existing GraphQL query",
+        "Add pagination to the GraphQL query",
+        "Do GraphQL on web and pagination on mobile"
+      ],
+      "correct": 0,
+      "literal": 1,
+      "cue": "\"2nd\" matches the numbered recap (1, 2), which is the latest and most explicit list. In that list, 2 is REST + pagination.",
+      "explanation": "The prose mentions REST first and GraphQL second, but the agent then restated the options with numbers. Ordinals bind to the most recent explicit enumeration, and the user's \"2nd\" echoes its numbering.",
+      "grounding": "CLAMBER: weak use of contextual cues for references. Recaps reorder options all the time in agent transcripts."
+    },
+    {
+      "id": "fh-08",
+      "category": "constraint",
+      "difficulty": "medium",
+      "context": "A production regression: a page crashes on users with no avatar.",
+      "history": [],
+      "question": "I can either revert commit a1b2c3 that introduced the crash, or patch forward with a null check. Heads up: the revert also removes the new request logging Sam added in that commit.",
+      "reply": "ugh, don't lose Sam's stuff",
+      "options": [
+        "Revert a1b2c3, then ask Sam to re-add the logging",
+        "Revert a1b2c3 and re-apply Sam's logging in a new commit",
+        "Leave the crash and ask Sam to fix it",
+        "Patch forward with a null check and keep the commit as is"
+      ],
+      "correct": 3,
+      "literal": 1,
+      "cue": "The user answers with a constraint (keep Sam's logging), not an option label. Only the patch-forward option satisfies it directly.",
+      "explanation": "The reply names a consequence to avoid, which rules out the revert. Revert-and-reapply technically keeps the logging, but it's the roundabout version of the option the user just turned down.",
+      "grounding": "STaR-GATE: preferences are often stated as constraints, and the agent has to map them to the action."
+    },
+    {
+      "id": "fh-09",
+      "category": "hedging",
+      "difficulty": "easy",
+      "context": "Finishing a small bug fix.",
+      "history": [],
+      "question": "Unit tests pass locally. Should I also run the full 40-minute end-to-end suite before pushing, or rely on CI?",
+      "reply": "CI exists for a reason lol",
+      "options": [
+        "Run the full e2e suite locally first to be safe",
+        "Push now and let CI run the e2e suite",
+        "Run half the e2e suite locally as a compromise",
+        "Skip pushing until the user confirms explicitly"
+      ],
+      "correct": 1,
+      "literal": 1,
+      "cue": "The rhetorical remark plus \"lol\" means: obviously rely on CI.",
+      "explanation": "An indirect answer that is still clear. The humor softens it but doesn't reverse it. Waiting for a more explicit yes is the over-cautious failure that wastes the user's turns.",
+      "grounding": "Ambig-SWE user-burden analysis: extra questions cost the user time."
+    },
+    {
+      "id": "fh-10",
+      "category": "anaphora",
+      "difficulty": "hard",
+      "context": "CI is red on a pull request.",
+      "history": [
+        { "who": "user", "text": "why is CI red on my PR" }
+      ],
+      "question": "The failure is the lint step, not the tests: there's an unused import in api.ts. Separately, there's a type warning in models.ts, but it doesn't fail the build. Want me to fix it?",
+      "reply": "yeah that",
+      "options": [
+        "Fix the type warning in models.ts",
+        "Fix both the unused import and the type warning",
+        "Remove the unused import in api.ts so lint passes",
+        "Disable the lint rule so the step passes"
+      ],
+      "correct": 2,
+      "literal": 0,
+      "cue": "The conversation is about why CI is red. \"It\" and \"that\" point to the failure, not to the side note mentioned last.",
+      "explanation": "Recency suggests the type warning, which was mentioned last. Salience points to the lint failure, which is the user's actual problem, and the agent called the warning a separate thing. Fixing both is plausible but more than \"that\" (singular) asks for.",
+      "grounding": "CLAMBER pronoun findings; Clark & Wilkes-Gibbs: reference resolves against the shared topic, not the last noun."
+    },
+    {
+      "id": "fh-11",
+      "category": "hedging",
+      "difficulty": "medium",
+      "context": "Fixing a rendering bug in a React 17 app.",
+      "history": [],
+      "question": "I could upgrade React 17 → 18 as part of this fix. It touches about 40 files. Go ahead?",
+      "reply": "I mean... I guess, if it's needed?",
+      "options": [
+        "Fix the bug without the upgrade (it isn't required) and mention the upgrade as a possible follow-up",
+        "Do the full React 18 upgrade now, since the user said yes",
+        "Upgrade react but pin react-dom to 17 to limit the change",
+        "Drop the bug fix until the user decides about the upgrade"
+      ],
+      "correct": 0,
+      "literal": 1,
+      "cue": "\"I mean... I guess\" is reluctance, and \"if it's needed?\" makes the yes conditional on necessity.",
+      "explanation": "This is a hedged, conditional yes. The upgrade isn't needed for the fix, so the condition fails. The strong move is the minimal fix plus a note. The half-upgrade is broken engineering, and stalling ignores the request.",
+      "grounding": "ACT: models \"overhedge or implicitly guess\". Grice: hedges carry implied meaning."
+    },
+    {
+      "id": "fh-12",
+      "category": "scope",
+      "difficulty": "medium",
+      "context": "Documentation cleanup.",
+      "history": [],
+      "question": "The README's install section still references Node 14 and yarn 1. Should I update just that section, or do a pass over the whole README?",
+      "reply": "while you're in there",
+      "options": [
+        "Update only the install section",
+        "Ask what \"there\" refers to",
+        "Rewrite the whole docs/ folder too",
+        "Do a pass over the whole README"
+      ],
+      "correct": 3,
+      "literal": 0,
+      "cue": "\"While you're in there\" is an idiom for \"you're already editing it, so do the nearby fixes too\".",
+      "explanation": "The idiom approves the broader option, and the broader option was the whole README. Expanding to docs/ goes beyond it. Asking about \"there\" treats an idiom as a literal place.",
+      "grounding": "AmbigQA: ambiguity is everywhere, but idioms are a solved case for a fluent listener."
+    },
+    {
+      "id": "fh-13",
+      "category": "delegation",
+      "difficulty": "medium",
+      "context": "Earlier the user said: \"we're on one small VPS, no Docker, I really don't want to babysit infra\".",
+      "history": [
+        { "who": "user", "text": "we're on one small VPS, no Docker, I really don't want to babysit infra" },
+        { "who": "agent", "text": "Got it. I'll add the email-sending feature." }
+      ],
+      "question": "For background jobs: Redis + BullMQ, or pg-boss, a Postgres-backed queue that uses the database you already run?",
+      "reply": "least moving parts",
+      "options": [
+        "Redis + BullMQ, the most popular Node queue",
+        "pg-boss on the existing Postgres",
+        "A hosted queue service such as SQS",
+        "Write a custom in-process job queue"
+      ],
+      "correct": 1,
+      "literal": 0,
+      "cue": "\"Least moving parts\" plus the earlier \"no babysitting infra\" rules out adding a new service.",
+      "explanation": "pg-boss adds a library and no new infrastructure. Redis adds a server to run, a hosted queue adds a vendor and credentials, and a hand-rolled queue adds code to maintain.",
+      "grounding": "Laban et al.: constraints from early turns get dropped in multi-turn settings."
+    },
+    {
+      "id": "fh-14",
+      "category": "scope",
+      "difficulty": "medium",
+      "context": "Refactoring a service whose JSON API is used by external partners.",
+      "history": [],
+      "question": "Want me to rename userId to accountId in the API response too, or only in the internal code?",
+      "reply": "keep the contract",
+      "options": [
+        "Rename it in the response too and bump the API version",
+        "Add accountId to the response alongside userId",
+        "Rename internally only; the response keeps userId",
+        "Don't rename anything"
+      ],
+      "correct": 2,
+      "literal": 3,
+      "cue": "The \"contract\" is the public API shape. Keeping it means the response stays the same, and the internal rename can go ahead.",
+      "explanation": "The reply picks \"only internally\" by naming the thing to protect. \"Don't rename anything\" over-reads \"keep\". Adding a field changes the contract, even if it doesn't break it.",
+      "grounding": "Ambig-SWE: answerable questions get short, domain-flavored answers."
+    },
+    {
+      "id": "fh-15",
+      "category": "constraint",
+      "difficulty": "medium",
+      "context": "Twenty minutes ago the user said they're demoing to a client at 3pm. It's now 2:40.",
+      "history": [
+        { "who": "user", "text": "client demo at 3, the schedule page shows everyone's meetings an hour off, help" }
+      ],
+      "question": "Root cause: date parsing is timezone-naive. The proper fix is moving everything to UTC (about 2 hours), or I can hardcode the client's offset as a stopgap. Which?",
+      "reply": "whichever, just make it work",
+      "options": [
+        "Ship the hardcoded-offset stopgap now and leave a TODO/issue for the UTC migration",
+        "Start the proper UTC migration, since the user is fine with either",
+        "Suggest postponing the demo so the fix can be done properly",
+        "Hardcode the offset and delete the timezone handling code entirely"
+      ],
+      "correct": 0,
+      "literal": 1,
+      "cue": "The demo is in 20 minutes and the proper fix takes 2 hours. \"Just make it work\" means make it work now.",
+      "explanation": "\"Whichever\" delegates, but the constraint from the first message decides. A strong agent ships the stopgap and records the debt. Deleting timezone code is reckless, and suggesting a postponement ignores the request.",
+      "grounding": "Laban et al.: losing early-turn constraints."
+    },
+    {
+      "id": "fh-16",
+      "category": "ordinal",
+      "difficulty": "hard",
+      "context": "Choosing a styling approach for a new Next.js app.",
+      "history": [
+        { "who": "agent", "text": "For styling: (A) Tailwind, or (B) CSS Modules?" },
+        { "who": "user", "text": "what about styled-components?" }
+      ],
+      "question": "styled-components adds runtime cost and complicates your SSR setup, so I'd skip it. So, CSS Modules or Tailwind?",
+      "reply": "b",
+      "options": [
+        "Tailwind, the second option in the latest message",
+        "styled-components, since the user brought it up",
+        "Ask whether \"b\" means the label or the position",
+        "CSS Modules, labeled (B) in the original list"
+      ],
+      "correct": 3,
+      "literal": 0,
+      "cue": "Letters refer to letter labels. The only lettered list is the first one, where B = CSS Modules. The recap has no letters.",
+      "explanation": "The recap swapped the order, so positionally the second option is now Tailwind. But the user replied with a letter, and \"b\" was only ever defined as CSS Modules. A strong agent binds the letter to its label, not to a position in an unlabeled sentence.",
+      "grounding": "ClariQ / CLAMBER: references resolve against defined labels. Recap reordering is a common transcript trap."
+    },
+    {
+      "id": "fh-17",
+      "category": "hedging",
+      "difficulty": "medium",
+      "context": "The bug was in parsePrice(), one of 12 helpers in utils/money.ts, none of which have tests.",
+      "history": [],
+      "question": "I fixed parsePrice. I can write unit tests for all 12 helper functions, or just for parsePrice. Preference?",
+      "reply": "this isn't a coverage contest",
+      "options": [
+        "Write tests for all 12 helpers",
+        "Write no tests, since the user doesn't care about coverage",
+        "Write tests for parsePrice only, including a regression case for this bug",
+        "Write tests for the six most-used helpers as a compromise"
+      ],
+      "correct": 2,
+      "literal": 1,
+      "cue": "Mild sarcasm aimed at the \"all 12\" option. It doesn't reject tests altogether.",
+      "explanation": "The jab is at broad coverage for its own sake, not at testing. The narrower option the agent offered (parsePrice) is what's left. Reading it as \"no tests\" overcorrects, and \"six helpers\" invents an option.",
+      "grounding": "Grice: an ironic remark targets one option. HumanEvalComm: test scope is commonly underspecified."
+    },
+    {
+      "id": "fh-18",
+      "category": "constraint",
+      "difficulty": "hard",
+      "context": "At the start of the session, the user said the tool runs on a customer's air-gapped server.",
+      "history": [
+        { "who": "user", "text": "context: this reporting tool runs on the customer's air-gapped server" },
+        { "who": "agent", "text": "Noted. Working on the export feature now." },
+        { "who": "agent", "text": "CSV export is done. Moving on to PDF." }
+      ],
+      "question": "For PDF generation: Puppeteer (headless Chrome, bundled locally), or a hosted API like DocRaptor? DocRaptor is simpler to integrate.",
+      "reply": "whatever's simpler",
+      "options": [
+        "DocRaptor, since the agent said it's simpler",
+        "Puppeteer bundled locally",
+        "DocRaptor, after asking the user for an API key",
+        "Build a custom PDF renderer from scratch"
+      ],
+      "correct": 1,
+      "literal": 0,
+      "cue": "An air-gapped server can't reach a hosted API. The simplest option that works is Puppeteer.",
+      "explanation": "The agent forgot its own context when it called DocRaptor simpler. A hosted API doesn't work at all without network access. \"Whatever's simpler\" always means simplest among the options that meet the constraints, so a strong agent recovers the constraint from turn one.",
+      "grounding": "Laban et al.: \"LLMs get lost\" by dropping earlier-turn information. Ambig-SWE: unwarranted assumptions."
+    },
+    {
+      "id": "fh-19",
+      "category": "anaphora",
+      "difficulty": "hard",
+      "context": "Rotating a database URL after a credentials leak.",
+      "history": [
+        { "who": "user", "text": "rotate the DB url to the new one in 1password" }
+      ],
+      "question": "Done. I updated DATABASE_URL in the staging environment to the new value. Want me to do the same for production?",
+      "reply": "wait, that was supposed to be prod",
+      "options": [
+        "Revert the staging change and apply the new URL to production",
+        "Keep the staging change and also update production",
+        "Revert the staging change only, and wait",
+        "Leave everything as is and explain why staging was chosen"
+      ],
+      "correct": 0,
+      "literal": 1,
+      "cue": "\"wait, that was supposed to be…\" is a repair. It corrects the last action instead of answering the yes/no question.",
+      "explanation": "The user is fixing the agent's earlier mistake: the rotation was meant for prod. So undo the wrong change and make the intended one. \"Also update prod\" reads the reply as a yes and leaves staging pointing at prod's new database. Reverting and waiting does half the job.",
+      "grounding": "Shaikh et al.: repair is a core grounding act that LLMs under-handle, and early failures cascade."
+    },
+    {
+      "id": "fh-20",
+      "category": "ordinal",
+      "difficulty": "hard",
+      "context": "A slow monthly revenue report.",
+      "history": [],
+      "question": "Plan: 1. Add an index on orders.created_at. 2. Rewrite the report query to avoid the N+1. 3. Add a cache layer. How should I proceed? (a) all three in order, (b) just the index for now and measure, (c) skip straight to caching.",
+      "reply": "b then 2 if needed",
+      "options": [
+        "Do all three steps in order",
+        "Add the index, then go straight to caching",
+        "Rewrite the query first, then add the index",
+        "Add the index and measure; rewrite the query only if it's still slow"
+      ],
+      "correct": 3,
+      "literal": 1,
+      "cue": "Letters and numbers point at two different lists: \"b\" is the lettered choice (index and measure), and \"2\" is plan step 2 (rewrite the query).",
+      "explanation": "The reply mixes two labeling schemes on purpose. \"b\" picks a strategy and \"2\" names a plan step, with \"if needed\" making it conditional. Binding \"2\" to anything other than plan step 2, or dropping the \"if needed\" condition, misreads the reply.",
+      "grounding": "CLAMBER/ClariQ: referents depend on context. Mixed numbering is common in long agent plans."
+    }
+  ]
+}

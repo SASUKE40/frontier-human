@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate items
+        run: |
+          node -e '
+            const d = require("./site/data/items.json");
+            if (d.items.length !== 20) throw new Error("expected 20 items, got " + d.items.length);
+            for (const it of d.items) {
+              if (it.options.length !== 4) throw new Error(it.id + ": needs 4 options");
+              if (!(it.correct >= 0 && it.correct < 4)) throw new Error(it.id + ": bad correct index");
+              if (!(it.literal >= 0 && it.literal < 4)) throw new Error(it.id + ": bad literal index");
+              if (!d.categories[it.category]) throw new Error(it.id + ": unknown category");
+              if (!d.difficulties[it.difficulty]) throw new Error(it.id + ": unknown difficulty");
+            }
+            console.log("items ok");
+          '
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
